@@ -4,15 +4,14 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Welcome to Sate API!"
+    return {"message": "Hello, World!"}
 
-@app.route('/some-endpoint', methods=['GET', 'POST'])
-def some_endpoint():
-    if request.method == 'GET':
-        return "This is a GET request"
-    elif request.method == 'POST':
-        param = request.form.get('param', 'no param')
-        return f"Received param: {param}"
+@app.route('/reply', methods=['POST'])
+def reply():
+    message = request.form.get('message')
+    # Implement logic to process the message and scrape the URL
+    # Example: You can call another function to handle the scraping
+    return {"reply": f"Here is the processed message: {message}"}
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
