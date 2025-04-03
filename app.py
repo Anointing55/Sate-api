@@ -23,10 +23,10 @@ def extract_title(url):
 def reply():
     # Get the message from the form data
     message = request.form.get('message')
-
+    
     # Find all URLs in the message using regex
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\,]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)
-
+    
     # If URLs are found in the message, process the first URL
     if urls:
         # Extract the title of the first URL found
