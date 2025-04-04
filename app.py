@@ -10,47 +10,49 @@ def get_instructions(url, query):
         response = requests.get(url, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Default response for cases where no specific instructions are found
-        instructions = "Sorry, I could not find specific instructions for this query."
+        # Default response if no specific instructions are found
+        instructions = "Sorry, I could not find specific instructions for your request."
 
-        # Handle common instructions queries
-        if 'signup' in query.lower():
-            instructions = "To sign up for this website:\n1. Visit the 'Sign Up' or 'Register' page (usually found on the homepage or in the top-right corner).\n2. Provide your email address, username, and create a password.\n3. Click 'Register' or 'Sign Up'.\n4. Check your email for a verification message and click the confirmation link.\n5. Once confirmed, you can log in with your credentials."
-        
-        elif 'login' in query.lower():
-            instructions = "To log in to this website:\n1. Go to the login page.\n2. Enter your email/username and password.\n3. Click 'Login' to access your account."
-        
-        elif 'terms' in query.lower() or 'privacy' in query.lower():
-            instructions = "To view the terms and conditions or privacy policy:\n1. Scroll to the bottom of the homepage.\n2. Click on the link titled 'Terms & Conditions' or 'Privacy Policy'.\n3. Read through the provided terms."
+        # Handle common instruction queries
+        query_lower = query.lower()
 
-        elif 'subscription' in query.lower() or 'pricing' in query.lower():
-            instructions = "To check subscription plans or pricing:\n1. Visit the pricing or subscription page (usually found in the top menu or footer).\n2. Review the different plans and pricing options.\n3. Choose a plan and follow the instructions to complete the process."
-        
-        # If no match for query, we respond with default message
+        if 'signup' in query_lower:
+            instructions = "To sign up for this website:\n1. Visit the homepage.\n2. Click 'Sign Up' or 'Register'.\n3. Enter your details and submit."
+
+        elif 'login' in query_lower:
+            instructions = "To log in:\n1. Go to the login page.\n2. Enter your username and password.\n3. Click 'Login'."
+
+        elif 'terms' in query_lower or 'privacy' in query_lower:
+            instructions = "To view terms or privacy policy:\n1. Scroll to the bottom of the website.\n2. Click on 'Terms & Conditions' or 'Privacy Policy'."
+
+        elif 'subscription' in query_lower or 'pricing' in query_lower:
+            instructions = "To check subscription plans or pricing:\n1. Look for a 'Pricing' or 'Plans' tab.\n2. Click on it to view available options."
+
         return instructions
+
     except requests.exceptions.RequestException:
-        # If the website cannot be reached, provide fallback generic instructions
-        return "I couldn't fetch specific instructions from the website, but here's how things usually work:\n1. Look for the 'Sign Up' or 'Register' page on the homepage.\n2. Enter your details, such as email and password.\n3. Click 'Sign Up' and check your email for verification instructions.\n4. After verification, you should be able to log in."
+        return "I couldn't fetch specific instructions from the website. Please check the URL and try again."
 
 # API route for handling the query
 @app.route('/api/query', methods=['POST'])
 def query_handler():
     try:
-        # Get JSON data from the POST request
         data = request.get_json()
-        
-        # Extract the URL and query from the data
+
+        # Extract the URL and query
         query = data.get("query", "")
-        
-        if "https://" in query:
-            url = query.split("https://")[1].split(" ")[0]
-            response = get_instructions(f"https://{url}", query)
-            return jsonify({"response": response}), 200
-        else:
-            return jsonify({"error": "Please provide a valid URL."}), 400
+        url = data.get("url", "")
+
+        if not url.startswith("http"):
+            return jsonify({"error": "Invalid or missing URL"}), 400
+
+        # Get response
+        response = get_instructions(url, query)
+        return jsonify({"response": response})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Run Flask app
 if __name__ == '__main__':
     app.run(debug=True)
