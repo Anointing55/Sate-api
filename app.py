@@ -4,55 +4,51 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
+# Root endpoint to confirm API is running
+@app.route('/')
+def home():
+    return jsonify({"message": "Sate API is live!"})
+
 # Function to get instructions based on the query
 def get_instructions(url, query):
     try:
         response = requests.get(url, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Default response if no specific instructions are found
-        instructions = "Sorry, I could not find specific instructions for your request."
+        # Default response
+        instructions = "Sorry, I could not find specific instructions."
 
-        # Handle common instruction queries
+        # Handle common queries
         query_lower = query.lower()
-
         if 'signup' in query_lower:
-            instructions = "To sign up for this website:\n1. Visit the homepage.\n2. Click 'Sign Up' or 'Register'.\n3. Enter your details and submit."
-
+            instructions = "To sign up:\n1. Visit the website\n2. Click 'Sign Up'\n3. Follow the instructions."
         elif 'login' in query_lower:
-            instructions = "To log in:\n1. Go to the login page.\n2. Enter your username and password.\n3. Click 'Login'."
-
+            instructions = "To log in:\n1. Go to the login page\n2. Enter your credentials\n3. Click 'Login'."
         elif 'terms' in query_lower or 'privacy' in query_lower:
-            instructions = "To view terms or privacy policy:\n1. Scroll to the bottom of the website.\n2. Click on 'Terms & Conditions' or 'Privacy Policy'."
-
+            instructions = "To view terms and privacy:\n1. Check the footer of the website\n2. Click 'Terms' or 'Privacy Policy'."
         elif 'subscription' in query_lower or 'pricing' in query_lower:
-            instructions = "To check subscription plans or pricing:\n1. Look for a 'Pricing' or 'Plans' tab.\n2. Click on it to view available options."
-
+            instructions = "To check subscription plans:\n1. Visit the pricing page\n2. Choose a plan."
+        
         return instructions
-
     except requests.exceptions.RequestException:
-        return "I couldn't fetch specific instructions from the website. Please check the URL and try again."
+        return "I couldn't fetch specific instructions. Please check the website manually."
 
-# API route for handling the query
+# API route for handling queries
 @app.route('/api/query', methods=['POST'])
 def query_handler():
     try:
         data = request.get_json()
-
-        # Extract the URL and query
         query = data.get("query", "")
         url = data.get("url", "")
 
-        if not url.startswith("http"):
-            return jsonify({"error": "Invalid or missing URL"}), 400
+        if url and "https://" in url:
+            response_text = get_instructions(url, query)
+        else:
+            response_text = "Invalid URL provided."
 
-        # Get response
-        response = get_instructions(url, query)
-        return jsonify({"response": response})
-
+        return jsonify({"response": response_text})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)})
 
-# Run Flask app
 if __name__ == '__main__':
     app.run(debug=True)
